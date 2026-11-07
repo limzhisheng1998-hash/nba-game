@@ -898,10 +898,10 @@ canvas.court {
   font-size: 11px;
 }
 
-/* On defense, STEAL sits on top and SWITCH on the left (swapped from PASS/SPIN spots). */
+/* On defense, SWITCH sits left of BLOCK with STEAL stacked directly above it. */
 .pad[data-mode='defense'] .btn-b {
-  right: 9px;
-  bottom: 92px;
+  right: 91px;
+  bottom: 80px;
   width: 62px;
   height: 62px;
 }
