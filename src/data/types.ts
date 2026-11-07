@@ -43,7 +43,7 @@ export interface TeamDef {
 }
 
 export type Difficulty = 'rookie' | 'pro' | 'allstar' | 'superstar' | 'hof';
-export type QuarterMinutes = 3 | 5 | 10;
+export type QuarterMinutes = 2 | 3 | 5 | 10;
 
 export interface Settings {
   difficulty: Difficulty;

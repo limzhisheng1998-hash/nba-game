@@ -130,7 +130,7 @@ function settingsFields(s: Settings, full: boolean) {
     <label>Difficulty</label>
     ${chips('difficulty', DIFFICULTY_ORDER.map((d) => [d, DIFFICULTIES[d].label] as [string, string]), s.difficulty)}
     <label>Quarter length</label>
-    ${chips('quarter', [[3, '3 min'], [5, '5 min'], [10, '10 min']], s.quarterMinutes)}
+    ${chips('quarter', [[2, '2 min'], [3, '3 min'], [5, '5 min'], [10, '10 min']], s.quarterMinutes)}
     ${
       full
         ? `<label>Shot meter</label>${chips('shotMeter', [['on', 'On'], ['off', 'Off']], s.shotMeter ? 'on' : 'off')}`
@@ -211,7 +211,7 @@ function showDreamList() {
                  </div>`;
                })
                .join('')
-           : `<p class="empty">No dream teams yet. Tap <b>+ New</b> and pick any legends you like — Jordan, Shaq, Curry, Bird, LeBron on one team. No limits.</p>`
+           : `<p class="empty">No dream teams yet. Tap <b>+ New</b> and pick any legends you like — Jordan, Shaq, Curry, Dirk, LeBron on one team. No limits.</p>`
        }
      </div>`,
   );

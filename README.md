@@ -7,14 +7,14 @@ The focus is on game mechanics. Players are simple jersey tokens, not detailed m
 ## Features
 
 - **Real-time play.** You control one player. The AI runs your teammates and the opponent.
-- **10 legendary teams:** '86 Celtics, '87 Lakers, '96 Bulls, '98 Bulls, '01 Lakers, '08 Celtics, '08 Lakers, '13 Heat, '14 Warriors, '17 Warriors.
+- **12 legendary teams:** '96 Bulls, '98 Bulls, '01 Lakers, '08 Celtics, '08 Lakers, '11 Mavericks, '13 Heat, '14 Spurs, '14 Warriors, '16 Cavaliers, '17 Warriors, '18 Rockets.
 - **Difficulty:** Rookie, Pro, All-Star, Superstar, Hall of Fame. It changes:
   - your shot bonus or penalty
   - the size of the green window on the shot meter
   - how quickly the AI makes decisions
   - how aggressive the AI is with steals and help defense
   - how often the AI fouls, and how well it blocks
-- **Quarter length:** 3, 5 or 10 minutes. Overtime runs half a quarter.
+- **Quarter length:** 2, 3, 5 or 10 minutes. Overtime runs half a quarter.
 - **Dream Team builder.** Pick any legends from any team, with no salary cap. You need at least 5 players and can have up to 13. The top 5 start. Choose a name and jersey colours. Dream Teams are saved on the device.
 - **Full basketball rules:**
   - game clock and 24-second shot clock (14 after an offensive rebound)

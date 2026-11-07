@@ -72,28 +72,6 @@ function team(
 }
 
 export const TEAMS: TeamDef[] = [
-  team('bos86', "'86 Celtics", 'Boston Celtics', '1985-86', 'BOS', '#007A33', '#FFFFFF', [
-    ['Dennis Johnson', 'PG', '3', 84, 'playmaker', { perD: 88, steal: 80 }],
-    ['Danny Ainge', 'SG', '44', 81, 'shooter', { three: 82 }],
-    ['Larry Bird', 'SF', '33', 97, 'star', { three: 92, mid: 97, ft: 92, pass: 92, reb: 88, h: 81 }],
-    ['Kevin McHale', 'PF', '32', 90, 'post', { inside: 95, mid: 78, block: 82, h: 82 }],
-    ['Robert Parish', 'C', '00', 87, 'post', { reb: 88, mid: 74, h: 84 }],
-    ['Bill Walton', 'C', '5', 80, 'rim', { pass: 82, reb: 86, h: 83 }],
-    ['Scott Wedman', 'SF', '8', 75, 'shooter'],
-    ['Jerry Sichting', 'PG', '12', 73, 'shooter'],
-    ['Sam Vincent', 'PG', '11', 70, 'playmaker'],
-  ]),
-  team('lal87', "'87 Lakers", 'Los Angeles Lakers', '1986-87', 'LAL', '#552583', '#FDB927', [
-    ['Magic Johnson', 'PG', '32', 97, 'playmaker', { pass: 99, handle: 92, inside: 88, reb: 80, strength: 80, h: 81 }],
-    ['Byron Scott', 'SG', '4', 83, 'shooter'],
-    ['James Worthy', 'SF', '42', 89, 'slasher', { inside: 93, speed: 88 }],
-    ['A.C. Green', 'PF', '45', 79, 'twoWayF', { reb: 84 }],
-    ['Kareem Abdul-Jabbar', 'C', '33', 89, 'post', { inside: 94, mid: 82, ft: 76, block: 84, h: 86 }],
-    ['Michael Cooper', 'SG', '21', 80, 'threeD', { perD: 92, three: 78 }],
-    ['Mychal Thompson', 'C', '43', 78, 'post'],
-    ['Kurt Rambis', 'PF', '31', 72, 'rim'],
-    ['Wes Matthews', 'PG', '5', 70, 'playmaker'],
-  ]),
   team('chi96', "'96 Bulls", 'Chicago Bulls', '1995-96', 'CHI', '#CE1141', '#000000', [
     ['Ron Harper', 'PG', '9', 78, 'threeD', { perD: 86 }],
     ['Michael Jordan', 'SG', '23', 99, 'star', { mid: 99, inside: 97, three: 82, ft: 86, perD: 96, steal: 93, handle: 94, speed: 94 }],
@@ -149,6 +127,17 @@ export const TEAMS: TeamDef[] = [
     ['Sasha Vujacic', 'SG', '18', 74, 'shooter'],
     ['Ronny Turiaf', 'PF', '21', 72, 'rim'],
   ]),
+  team('dal11', "'11 Mavericks", 'Dallas Mavericks', '2010-11', 'DAL', '#00538C', '#B8C4CA', [
+    ['Jason Kidd', 'PG', '2', 82, 'playmaker', { pass: 95, three: 80, steal: 84 }],
+    ['DeShawn Stevenson', 'SG', '92', 72, 'threeD'],
+    ['Shawn Marion', 'SF', '0', 80, 'twoWayF', { perD: 84 }],
+    ['Dirk Nowitzki', 'PF', '41', 95, 'stretch', { mid: 98, three: 88, ft: 92, inside: 86, h: 84 }],
+    ['Tyson Chandler', 'C', '6', 82, 'rim', { reb: 88, block: 84, h: 85 }],
+    ['Jason Terry', 'SG', '31', 82, 'shooter', { three: 86 }],
+    ['J.J. Barea', 'PG', '11', 75, 'playmaker'],
+    ['Peja Stojakovic', 'SF', '16', 74, 'shooter', { three: 88 }],
+    ['Brendan Haywood', 'C', '33', 72, 'rim'],
+  ]),
   team('mia13', "'13 Heat", 'Miami Heat', '2012-13', 'MIA', '#98002E', '#F9A01B', [
     ['Mario Chalmers', 'PG', '15', 77, 'shooter'],
     ['Dwyane Wade', 'SG', '3', 91, 'slasher', { inside: 96, block: 72, steal: 85, three: 60 }],
@@ -161,6 +150,17 @@ export const TEAMS: TeamDef[] = [
     ['Mike Miller', 'SF', '13', 73, 'shooter'],
     ['Norris Cole', 'PG', '30', 72, 'playmaker'],
   ]),
+  team('sas14', "'14 Spurs", 'San Antonio Spurs', '2013-14', 'SAS', '#000000', '#C4CED4', [
+    ['Tony Parker', 'PG', '9', 87, 'playmaker', { inside: 90, mid: 86 }],
+    ['Danny Green', 'SG', '4', 78, 'threeD', { three: 88 }],
+    ['Kawhi Leonard', 'SF', '2', 86, 'threeD', { perD: 95, steal: 92, mid: 82 }],
+    ['Tim Duncan', 'PF', '21', 89, 'post', { intD: 92, block: 86, mid: 82, reb: 90, h: 83 }],
+    ['Tiago Splitter', 'C', '22', 77, 'rim'],
+    ['Manu Ginobili', 'SG', '20', 85, 'slasher', { pass: 86, three: 80 }],
+    ['Boris Diaw', 'PF', '33', 78, 'stretch', { pass: 84 }],
+    ['Patty Mills', 'PG', '8', 75, 'shooter'],
+    ['Marco Belinelli', 'SG', '3', 75, 'shooter'],
+  ]),
   team('gsw14', "'14 Warriors", 'Golden State Warriors', '2013-14', 'GSW', '#1D428A', '#FFC72C', [
     ['Stephen Curry', 'PG', '30', 93, 'playmaker', { three: 97, ft: 92, handle: 95, mid: 90 }],
     ['Klay Thompson', 'SG', '11', 86, 'shooter', { three: 92, perD: 84, h: 79 }],
@@ -171,6 +171,17 @@ export const TEAMS: TeamDef[] = [
     ['Harrison Barnes', 'SF', '40', 77, 'twoWayF'],
     ['Steve Blake', 'PG', '25', 72, 'shooter'],
     ["Jermaine O'Neal", 'C', '7', 74, 'post'],
+  ]),
+  team('cle16', "'16 Cavaliers", 'Cleveland Cavaliers', '2015-16', 'CLE', '#860038', '#FDBB30', [
+    ['Kyrie Irving', 'PG', '2', 91, 'playmaker', { handle: 98, inside: 92, three: 86, mid: 90 }],
+    ['J.R. Smith', 'SG', '5', 79, 'shooter', { three: 86 }],
+    ['LeBron James', 'SF', '23', 97, 'star', { inside: 97, pass: 94, strength: 96, speed: 91, perD: 90, three: 76, reb: 88, h: 80 }],
+    ['Kevin Love', 'PF', '0', 86, 'stretch', { reb: 90, three: 82, pass: 80 }],
+    ['Tristan Thompson', 'C', '13', 79, 'rim', { reb: 88 }],
+    ['Iman Shumpert', 'SG', '4', 75, 'threeD'],
+    ['Richard Jefferson', 'SF', '24', 74, 'threeD'],
+    ['Channing Frye', 'C', '9', 74, 'stretch', { three: 80 }],
+    ['Matthew Dellavedova', 'PG', '8', 72, 'playmaker'],
   ]),
   team('gsw17', "'17 Warriors", 'Golden State Warriors', '2016-17', 'GSW', '#1D428A', '#FFC72C', [
     ['Stephen Curry', 'PG', '30', 96, 'playmaker', { three: 99, ft: 95, handle: 98, mid: 93 }],
@@ -183,6 +194,17 @@ export const TEAMS: TeamDef[] = [
     ['JaVale McGee', 'C', '1', 77, 'rim', { block: 86, h: 84 }],
     ['David West', 'PF', '3', 76, 'post', { mid: 82 }],
     ['Ian Clark', 'SG', '21', 73, 'shooter'],
+  ]),
+  team('hou18', "'18 Rockets", 'Houston Rockets', '2017-18', 'HOU', '#CE1141', '#C4CED4', [
+    ['Chris Paul', 'PG', '3', 92, 'playmaker', { pass: 95, mid: 93, steal: 90, three: 86, perD: 86 }],
+    ['James Harden', 'SG', '13', 96, 'star', { three: 90, handle: 97, pass: 92, ft: 88, inside: 94 }],
+    ['Trevor Ariza', 'SF', '1', 79, 'threeD', { steal: 82 }],
+    ['P.J. Tucker', 'PF', '4', 77, 'threeD', { strength: 82 }],
+    ['Clint Capela', 'C', '15', 84, 'rim', { inside: 88, block: 84, h: 82 }],
+    ['Eric Gordon', 'SG', '10', 82, 'shooter', { three: 86 }],
+    ['Gerald Green', 'SG', '14', 74, 'shooter'],
+    ['Luc Mbah a Moute', 'SF', '12', 73, 'threeD'],
+    ['Nenê', 'C', '42', 73, 'post'],
   ]),
 ];
 

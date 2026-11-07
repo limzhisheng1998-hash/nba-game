@@ -3,8 +3,8 @@ import { ALL_PLAYERS, TEAMS } from '../src/data/teams';
 import { abbrFromName, deleteDreamTeam, dreamToTeamDef, listDreamTeams, saveDreamTeam } from '../src/state/dreamTeams';
 
 describe('teams data', () => {
-  it('has 10 legendary teams with at least 9 players and valid ratings', () => {
-    expect(TEAMS).toHaveLength(10);
+  it('has 12 legendary teams with at least 9 players and valid ratings', () => {
+    expect(TEAMS).toHaveLength(12);
     for (const t of TEAMS) {
       expect(t.players.length).toBeGreaterThanOrEqual(9);
       for (const p of t.players) for (const v of Object.values(p.r)) expect(v).toBeGreaterThanOrEqual(25), expect(v).toBeLessThanOrEqual(99);

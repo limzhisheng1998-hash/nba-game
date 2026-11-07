@@ -39,6 +39,17 @@ describe('full game simulation', () => {
     }
   });
 
+  it('plays a 2-minute-quarter game with the new teams', () => {
+    const ids = TEAMS.map((t) => t.id);
+    const g = new Game(TEAMS[ids.indexOf('hou18')], TEAMS[ids.indexOf('sas14')], { ...settings, quarterMinutes: 2 }, { userAI: true, rng: seeded(5) });
+    for (let n = 0; n < 60 * 60 * 30 && g.phase !== 'final'; n++) {
+      if (g.phase === 'break') g.continueAfterBreak();
+      g.step(1 / 60, NO_INPUT);
+    }
+    expect(g.phase).toBe('final');
+    expect(g.teams[0].score + g.teams[1].score).toBeGreaterThan(10);
+  });
+
   it('keeps box score consistent with the scoreboard', () => {
     const { g } = simulate(7);
     for (const t of g.teams) {
@@ -69,6 +80,8 @@ describe('full game simulation', () => {
     expect(g.clock).toBe(600);
     const g5 = new Game(TEAMS[0], TEAMS[1], { ...settings, quarterMinutes: 5 }, { userAI: true });
     expect(g5.clock).toBe(300);
+    const g2 = new Game(TEAMS[0], TEAMS[1], { ...settings, quarterMinutes: 2 }, { userAI: true });
+    expect(g2.clock).toBe(120);
   });
 
   it('teams swap baskets at halftime', () => {
