@@ -83,6 +83,8 @@ export class Player {
   driveX = 0;
   driveY = 0;
   contestedShot = -1;
+  /** Distance travelled, used to animate the running stride. */
+  stride = 0;
   constructor(
     public def: PlayerDef,
     public team: Side,
@@ -173,7 +175,7 @@ export class Game {
   teams: [TeamRT, TeamRT];
   ball = new Ball();
   phase: Phase = 'tipoff';
-  phaseT = 1.6;
+  phaseT = 2; // tip-off countdown
   quarter = 1;
   clock: number;
   shotClock = 24;
@@ -1003,6 +1005,7 @@ export class Game {
         }
       }
       const sp = Math.hypot(p.vx, p.vy);
+      if (p.z === 0) p.stride += sp * dt;
       if (sp > 1) {
         p.faceX = p.vx / sp;
         p.faceY = p.vy / sp;

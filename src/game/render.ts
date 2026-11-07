@@ -22,9 +22,9 @@ export class Renderer {
 
   resize() {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const rect = this.canvas.getBoundingClientRect();
-    this.w = rect.width || window.innerWidth;
-    this.h = rect.height || window.innerHeight;
+    // clientWidth/Height are layout sizes, unaffected by the CSS rotation used in portrait.
+    this.w = this.canvas.clientWidth || window.innerWidth;
+    this.h = this.canvas.clientHeight || window.innerHeight;
     this.canvas.width = Math.round(this.w * dpr);
     this.canvas.height = Math.round(this.h * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -88,6 +88,22 @@ export class Renderer {
     if (!ballDrawn) this.drawBall(g);
     this.drawMeter(g);
     this.drawFlash(g);
+    this.drawCountdown(g);
+  }
+
+  private drawCountdown(g: Game) {
+    if (g.phase !== 'tipoff') return;
+    const c = this.ctx;
+    const n = Math.ceil(g.phaseT);
+    const text = n >= 1 ? String(n) : 'TIP-OFF!';
+    c.font = `900 ${Math.round(Math.min(64, this.h * 0.18))}px system-ui, sans-serif`;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.lineWidth = 6;
+    c.strokeStyle = 'rgba(0,0,0,0.75)';
+    c.strokeText(text, this.w / 2, this.h * 0.42);
+    c.fillStyle = '#ffd23f';
+    c.fillText(text, this.w / 2, this.h * 0.42);
   }
 
   private drawCourt(g: Game) {
@@ -224,35 +240,144 @@ export class Renderer {
       c.ellipse(x, this.Y(p.y), 1.7 * this.s, 1.7 * this.s * this.k, 0, 0, Math.PI * 2);
       c.stroke();
     }
-    const bodyH = p.heightFt * 0.78 * this.s * this.zk;
+
+    const H = p.heightFt * 0.8 * this.s * this.zk; // feet to shoulders
     const feet = this.Y(p.y, p.z);
     const bw = 1.75 * this.s;
+    const legH = H * 0.42;
+    const torsoH = H * 0.58;
     const headR = 0.55 * this.s;
-    const wob = p.action === 'stunned' ? Math.sin(g.time * 30) * 2 : 0;
-    // Body (jersey)
+    const wob = p.action === 'stunned' ? Math.sin(g.time * 30) * 2.5 : 0;
+    const cx = x + wob;
+    const face = p.faceX >= 0 ? 1 : -1;
+    const speed = Math.hypot(p.vx, p.vy);
+    const run = Math.min(1, speed / 9);
+    const phase = p.stride * 2.4;
+    const swing = Math.sin(phase) * run;
+    const airborne = p.z > 0.2;
+
+    const b = g.ball;
+    const owner = b.mode === 'held' && b.owner === p;
+    const handler = b.mode === 'held' ? b.owner : null;
+    const defending = !!handler && handler.team !== p.team;
+    const guarding = defending && !!handler && Math.hypot(handler.x - p.x, handler.y - p.y) < 7;
+    const limb = '#4a4f57';
+
+    // Legs: stride while running, wide stance when guarding, tucked in the air.
+    const hipY = feet - legH;
+    const spread = bw * (guarding && !airborne ? 0.42 : 0.2);
+    const step = bw * 0.45 * swing;
+    const lift = airborne ? legH * 0.25 : 0;
+    c.strokeStyle = limb;
+    c.lineCap = 'round';
+    c.lineWidth = bw * 0.3;
+    c.beginPath();
+    c.moveTo(cx - bw * 0.2, hipY);
+    c.lineTo(cx - spread + step * face, feet - lift - Math.max(0, swing) * legH * 0.15);
+    c.moveTo(cx + bw * 0.2, hipY);
+    c.lineTo(cx + spread - step * face, feet - lift - Math.max(0, -swing) * legH * 0.15);
+    c.stroke();
+
+    // Torso (jersey). Bob a little while running; crouch when guarding.
+    const bob = Math.abs(Math.sin(phase)) * run * 1.5 + (guarding ? bw * 0.12 : 0);
+    const top = hipY - torsoH + bob;
     c.fillStyle = team.primary;
     c.strokeStyle = team.secondary;
     c.lineWidth = 2;
-    roundRect(c, x - bw / 2 + wob, feet - bodyH, bw, bodyH, bw * 0.35);
+    roundRect(c, cx - bw / 2, top, bw, hipY - top + bw * 0.15, bw * 0.3);
     c.fill();
     c.stroke();
+
+    // Arms: pose depends on what the player is doing.
+    const shY = top + bw * 0.18;
+    const arm = torsoH * 0.95;
+    const L = { x: cx - bw * 0.5, y: shY };
+    const R = { x: cx + bw * 0.5, y: shY };
+    let hl: { x: number; y: number };
+    let hr: { x: number; y: number };
+    const front = face > 0 ? 'r' : 'l';
+    if (p.action === 'shoot' || p.action === 'ftshoot' || (owner && (g.phase === 'ft' || p.action === 'layup') && p.action !== 'none')) {
+      // Both hands up over the head (set point).
+      hl = { x: cx - bw * 0.1, y: shY - arm * 0.95 };
+      hr = { x: cx + bw * 0.1, y: shY - arm * 0.95 };
+      if (p.action === 'layup') {
+        // One arm reaching for the rim.
+        const up = { x: cx + face * bw * 0.35, y: shY - arm };
+        const down = { x: cx - face * bw * 0.4, y: shY + arm * 0.5 };
+        if (front === 'r') {
+          hr = up;
+          hl = down;
+        } else {
+          hl = up;
+          hr = down;
+        }
+      }
+    } else if (owner && g.phase === 'ft') {
+      hl = { x: cx - bw * 0.15, y: shY + arm * 0.35 };
+      hr = { x: cx + bw * 0.15, y: shY + arm * 0.35 };
+    } else if (p.action === 'jump') {
+      // Contest / block / rebound: hands straight up.
+      hl = { x: cx - bw * 0.3, y: shY - arm };
+      hr = { x: cx + bw * 0.3, y: shY - arm };
+    } else if (p.stealCd > 0.6) {
+      // Reaching for a steal.
+      const reach = { x: cx + face * arm, y: shY + arm * 0.35 };
+      const back = { x: cx - face * bw * 0.4, y: shY + arm * 0.7 };
+      hl = front === 'l' ? reach : back;
+      hr = front === 'r' ? reach : back;
+    } else if (owner) {
+      // Dribble hand goes to the ball, the other arm protects.
+      const bx = this.X(b.x);
+      const by = this.Y(b.y, b.z);
+      const sh = front === 'r' ? R : L;
+      const dx = bx - sh.x;
+      const dy = by - sh.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const reach = Math.min(d, arm);
+      const ballHand = { x: sh.x + (dx / d) * reach, y: sh.y + (dy / d) * reach };
+      const guard = { x: cx - face * bw * 0.9, y: shY + arm * 0.45 };
+      hl = front === 'l' ? ballHand : guard;
+      hr = front === 'r' ? ballHand : guard;
+    } else if (guarding) {
+      // Defensive stance: arms out wide.
+      hl = { x: cx - bw * 0.5 - arm * 0.8, y: shY + arm * 0.1 + Math.sin(g.time * 6) * 2 };
+      hr = { x: cx + bw * 0.5 + arm * 0.8, y: shY + arm * 0.1 - Math.sin(g.time * 6) * 2 };
+    } else {
+      // Running / standing: arms swing opposite to the legs.
+      const sw = swing * bw * 0.55;
+      hl = { x: L.x - bw * 0.05 - sw * face, y: shY + arm * 0.85 };
+      hr = { x: R.x + bw * 0.05 + sw * face, y: shY + arm * 0.85 };
+    }
+    c.strokeStyle = limb;
+    c.lineWidth = bw * 0.24;
+    c.beginPath();
+    c.moveTo(L.x, L.y);
+    c.lineTo(hl.x, hl.y);
+    c.moveTo(R.x, R.y);
+    c.lineTo(hr.x, hr.y);
+    c.stroke();
+
     // Head
     c.beginPath();
-    c.arc(x + wob, feet - bodyH - headR * 0.9, headR, 0, Math.PI * 2);
+    c.arc(cx, top - headR * 0.95, headR, 0, Math.PI * 2);
     c.fillStyle = team.secondary;
     c.fill();
+    c.strokeStyle = 'rgba(0,0,0,0.35)';
+    c.lineWidth = 1;
+    c.stroke();
+
     // Number
     c.fillStyle = team.secondary;
-    c.font = `800 ${Math.round(this.s * 0.95)}px system-ui, sans-serif`;
+    c.font = `800 ${Math.round(this.s * 0.9)}px system-ui, sans-serif`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillText(p.def.num, x + wob, feet - bodyH * 0.55);
+    c.fillText(p.def.num, cx, top + (hipY - top) * 0.55);
     if (p.action === 'stunned') {
       c.fillStyle = '#ffd23f';
-      c.fillText('✦ ✦', x, feet - bodyH - headR * 2.6);
+      c.fillText('✦ ✦', cx, top - headR * 2.6);
     }
     if (controlled) {
-      const ty = feet - bodyH - headR * 2.4;
+      const ty = top - headR * 2.4;
       c.fillStyle = '#ffd23f';
       c.beginPath();
       c.moveTo(x - 6, ty - 8);

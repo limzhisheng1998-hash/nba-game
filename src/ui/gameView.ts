@@ -20,11 +20,15 @@ export class GameView {
   private acc = 0;
   private paused = false;
   private overlay: HTMLElement;
+  private gameEl: HTMLElement;
   private shownPhase = '';
   private hudCache = '';
   private toastCache = '';
   private els: Record<string, HTMLElement> = {};
-  private onResize = () => this.renderer.resize();
+  private onResize = () => {
+    this.applyOrientation();
+    this.renderer.resize();
+  };
   private onVis = () => {
     if (document.hidden && this.game.phase !== 'final' && this.game.phase !== 'break') this.pause();
   };
@@ -68,8 +72,10 @@ export class GameView {
     };
     this.overlay = q('.overlay');
     this.game = new Game(home, away, settings);
-    this.renderer = new Renderer(q('canvas.court') as HTMLCanvasElement);
+    this.gameEl = q('.game');
     this.input = new TouchInput(q('.controls'));
+    this.applyOrientation();
+    this.renderer = new Renderer(q('canvas.court') as HTMLCanvasElement);
     q('.pause-btn').addEventListener('click', () => this.pause());
     window.addEventListener('resize', this.onResize);
     window.addEventListener('orientationchange', this.onResize);
@@ -77,6 +83,26 @@ export class GameView {
     this.raf = requestAnimationFrame(this.loop);
     // Expose for debugging / automated tests.
     (window as unknown as { __game: Game }).__game = this.game;
+  }
+
+  /**
+   * If the phone is held upright (e.g. orientation lock is on), rotate the whole game
+   * 90° so it plays sideways anyway. Turn the phone to the left (top of phone to the left).
+   */
+  private applyOrientation() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const rotated = h > w;
+    const el = this.gameEl;
+    el.classList.toggle('rotated', rotated);
+    if (rotated) {
+      el.style.width = `${h}px`;
+      el.style.height = `${w}px`;
+      el.style.transform = `translateX(${w}px) rotate(90deg)`;
+    } else {
+      el.style.width = el.style.height = el.style.transform = '';
+    }
+    this.input.rotated = rotated;
   }
 
   private loop = (t: number) => {

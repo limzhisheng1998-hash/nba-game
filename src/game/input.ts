@@ -27,6 +27,8 @@ export class TouchInput {
   private knob: HTMLElement;
   private zone: HTMLElement;
   private cleanup: (() => void)[] = [];
+  /** True when the game is rotated 90° by CSS because the phone is in portrait (orientation lock on). */
+  rotated = false;
 
   constructor(root: HTMLElement) {
     root.insertAdjacentHTML(
@@ -61,19 +63,22 @@ export class TouchInput {
       if (this.joyId !== null) return;
       this.joyId = e.pointerId;
       this.zone.setPointerCapture?.(e.pointerId);
-      const r = this.zone.getBoundingClientRect();
       this.joyX = e.clientX;
       this.joyY = e.clientY;
-      this.base.style.left = `${e.clientX - r.left}px`;
-      this.base.style.top = `${e.clientY - r.top}px`;
+      const local = this.toLocal(e.clientX, e.clientY);
+      this.base.style.left = `${local.x - this.zone.offsetLeft}px`;
+      this.base.style.top = `${local.y - this.zone.offsetTop}px`;
       this.base.classList.add('active');
       this.knob.style.transform = 'translate(-50%, -50%)';
     });
     on(this.zone, 'pointermove', (e) => {
       if (e.pointerId !== this.joyId) return;
       e.preventDefault();
-      let dx = e.clientX - this.joyX;
-      let dy = e.clientY - this.joyY;
+      // Screen-space drag → game-space direction (undo the 90° rotation in portrait).
+      const sx = e.clientX - this.joyX;
+      const sy = e.clientY - this.joyY;
+      let dx = this.rotated ? sy : sx;
+      let dy = this.rotated ? -sx : sy;
       const d = Math.hypot(dx, dy);
       if (d > R) {
         dx = (dx / d) * R;
@@ -114,6 +119,11 @@ export class TouchInput {
     on(window, 'keydown', (e) => this.keys.add((e as KeyboardEvent).key.toLowerCase()));
     on(window, 'keyup', (e) => this.keys.delete((e as KeyboardEvent).key.toLowerCase()));
     on(window, 'blur', () => this.reset());
+  }
+
+  /** Screen point → point inside the (possibly rotated) game container. */
+  private toLocal(x: number, y: number) {
+    return this.rotated ? { x: y, y: window.innerWidth - x } : { x, y };
   }
 
   setMode(m: 'offense' | 'defense') {
