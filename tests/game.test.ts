@@ -70,4 +70,22 @@ describe('full game simulation', () => {
     const g5 = new Game(TEAMS[0], TEAMS[1], { ...settings, quarterMinutes: 5 }, { userAI: true });
     expect(g5.clock).toBe(300);
   });
+
+  it('teams swap baskets at halftime', () => {
+    const g = new Game(TEAMS[2], TEAMS[9], settings, { userAI: true });
+    expect(g.hoopX(0)).toBeGreaterThan(47);
+    let sawQ3 = false;
+    for (let n = 0; n < 60 * 60 * 60 && g.phase !== 'final'; n++) {
+      if (g.phase === 'break') g.continueAfterBreak();
+      if (g.quarter <= 2) expect(g.hoopX(0)).toBeGreaterThan(47);
+      else {
+        sawQ3 = true;
+        expect(g.hoopX(0)).toBeLessThan(47);
+        expect(g.hoopX(1)).toBeGreaterThan(47);
+      }
+      g.step(1 / 60, NO_INPUT);
+    }
+    expect(sawQ3).toBe(true);
+    for (const t of g.teams) expect(t.roster.reduce((s, p) => s + p.line.pts, 0)).toBe(t.score);
+  });
 });

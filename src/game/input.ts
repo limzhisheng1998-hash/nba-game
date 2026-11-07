@@ -1,20 +1,20 @@
 import type { FrameInput } from './game';
 
-type Btn = 'a' | 'b' | 'c' | 'd';
+type Btn = 'a' | 'b' | 'd';
 
 const LABELS: Record<'offense' | 'defense', Record<Btn, string>> = {
-  offense: { a: 'SHOOT', b: 'PASS', c: 'SPRINT', d: 'SPIN' },
-  defense: { a: 'BLOCK', b: 'STEAL', c: 'SPRINT', d: 'SWITCH' },
+  offense: { a: 'SHOOT', b: 'PASS', d: 'SPIN' },
+  defense: { a: 'BLOCK', b: 'STEAL', d: 'SWITCH' },
 };
 
 /**
  * On-screen touch controls: a floating joystick on the left half and four
- * buttons on the right. Uses pointer events so multi-touch works on iOS.
- * Keyboard (WASD/arrows + J K L Shift) is a dev-only fallback.
+ * buttons on the right (shoot/block, pass/steal, spin/switch). Uses pointer events so multi-touch works on iOS.
+ * Keyboard (WASD/arrows + J K L) is a dev-only fallback.
  */
 export class TouchInput {
-  private held: Record<Btn, boolean> = { a: false, b: false, c: false, d: false };
-  private prev: Record<Btn, boolean> = { a: false, b: false, c: false, d: false };
+  private held: Record<Btn, boolean> = { a: false, b: false, d: false };
+  private prev: Record<Btn, boolean> = { a: false, b: false, d: false };
   private mx = 0;
   private my = 0;
   private joyId: number | null = null;
@@ -36,7 +36,6 @@ export class TouchInput {
       `<div class="joy-zone"><div class="joy-base"><div class="joy-knob"></div></div></div>
        <div class="pad">
          <button class="btn btn-d" data-b="d"></button>
-         <button class="btn btn-c" data-b="c"></button>
          <button class="btn btn-b" data-b="b"></button>
          <button class="btn btn-a" data-b="a"></button>
        </div>`,
@@ -47,7 +46,6 @@ export class TouchInput {
     this.els = {
       a: root.querySelector('.btn-a')!,
       b: root.querySelector('.btn-b')!,
-      c: root.querySelector('.btn-c')!,
       d: root.querySelector('.btn-d')!,
     };
     this.setMode('offense');
@@ -98,7 +96,7 @@ export class TouchInput {
     on(this.zone, 'pointerup', joyEnd);
     on(this.zone, 'pointercancel', joyEnd);
 
-    for (const b of ['a', 'b', 'c', 'd'] as Btn[]) {
+    for (const b of ['a', 'b', 'd'] as Btn[]) {
       const el = this.els[b];
       on(el, 'pointerdown', (e) => {
         e.preventDefault();
@@ -129,12 +127,12 @@ export class TouchInput {
   setMode(m: 'offense' | 'defense') {
     if (m === this.mode) return;
     this.mode = m;
-    for (const b of ['a', 'b', 'c', 'd'] as Btn[]) this.els[b].textContent = LABELS[m][b];
+    for (const b of ['a', 'b', 'd'] as Btn[]) this.els[b].textContent = LABELS[m][b];
     this.els.a.parentElement?.setAttribute('data-mode', m);
   }
 
   reset() {
-    this.held = { a: false, b: false, c: false, d: false };
+    this.held = { a: false, b: false, d: false };
     this.mx = this.my = 0;
     this.joyId = null;
     this.keys.clear();
@@ -159,7 +157,6 @@ export class TouchInput {
     const cur: Record<Btn, boolean> = {
       a: this.held.a || k.has('j'),
       b: this.held.b || k.has('k'),
-      c: this.held.c || k.has('shift'),
       d: this.held.d || k.has('l'),
     };
     const out: FrameInput = {
@@ -167,7 +164,7 @@ export class TouchInput {
       my,
       a: cur.a,
       b: cur.b,
-      c: cur.c,
+      c: false, // no sprint button: everyone runs at full speed
       d: cur.d,
       aDown: cur.a && !this.prev.a,
       aUp: !cur.a && this.prev.a,

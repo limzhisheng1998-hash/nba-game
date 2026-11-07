@@ -36,7 +36,7 @@ describe('user controls', () => {
       const dx = g.hoopX(0) - p.x;
       const dy = 25 - p.y;
       const d = Math.hypot(dx, dy);
-      g.step(1 / 60, inp({ mx: dx / d, my: dy / d, c: true }));
+      g.step(1 / 60, inp({ mx: dx / d, my: dy / d }));
       if (g.ball.owner !== p) return; // stolen — rare, not what we're testing
     }
     g.step(1 / 60, inp({ a: true, aDown: true }));
@@ -68,5 +68,26 @@ describe('user controls', () => {
       expect(g.controlled).toBe(g.ball.owner);
       expect(g.controlled).not.toBe(passer);
     }
+  });
+
+  it('auto-switches to the defender nearest the new ball handler on defense', () => {
+    let i = 0;
+    const g = new Game(TEAMS[3], TEAMS[9], settings, { rng: () => ((i = (i * 9301 + 49297) % 233280), i / 233280) });
+    let checks = 0;
+    let last = g.ball.owner;
+    for (let n = 0; n < 60 * 90 && checks < 5; n++) {
+      g.step(1 / 60, NO_INPUT);
+      const h = g.ball.mode === 'held' ? g.ball.owner : null;
+      if (g.phase === 'live' && h && h.team === 1 && h !== last) {
+        g.step(1 / 60, NO_INPUT);
+        const nearest = [...g.teams[0].court].sort((a, b) => Math.hypot(a.x - h.x, a.y - h.y) - Math.hypot(b.x - h.x, b.y - h.y))[0];
+        if (g.ball.owner === h) {
+          expect(g.controlled).toBe(nearest);
+          checks++;
+        }
+      }
+      last = h;
+    }
+    expect(checks).toBeGreaterThan(0);
   });
 });

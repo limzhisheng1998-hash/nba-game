@@ -133,8 +133,7 @@ function settingsFields(s: Settings, full: boolean) {
     ${chips('quarter', [[3, '3 min'], [5, '5 min'], [10, '10 min']], s.quarterMinutes)}
     ${
       full
-        ? `<label>Substitutions</label>${chips('autoSubs', [['on', 'Auto'], ['off', 'Manual']], s.autoSubs ? 'on' : 'off')}
-           <label>Shot meter</label>${chips('shotMeter', [['on', 'On'], ['off', 'Off']], s.shotMeter ? 'on' : 'off')}`
+        ? `<label>Shot meter</label>${chips('shotMeter', [['on', 'On'], ['off', 'Off']], s.shotMeter ? 'on' : 'off')}`
         : ''
     }`;
 }
@@ -182,8 +181,8 @@ export function showSettings() {
        <div class="how">
          <h3>How to play</h3>
          <p><b>Left thumb:</b> drag anywhere on the left side to move.</p>
-         <p><b>Offense:</b> hold <b>SHOOT</b> to rise up and release when the meter hits the green zone. Near the rim it's an automatic layup or dunk. <b>PASS</b> goes to the teammate you're pushing toward (or the most open one). <b>SPIN</b> can break ankles. Hold <b>SPRINT</b> for speed, but it burns stamina.</p>
-         <p><b>Defense:</b> <b>SWITCH</b> takes control of the defender closest to the ball. <b>STEAL</b> close to the ball handler (reaching can cost a foul). <b>BLOCK</b> jumps to contest shots and grab rebounds.</p>
+         <p><b>Offense:</b> hold <b>SHOOT</b> to rise up and release when the meter hits the green zone. Near the rim it's an automatic layup or dunk. <b>PASS</b> goes to the teammate you're pushing toward (or the most open one). <b>SPIN</b> can break ankles. Everyone runs at full speed — no sprint button, no fatigue.</p>
+         <p><b>Defense:</b> Your control jumps automatically to the defender closest to whoever has the ball; <b>SWITCH</b> changes player any time. <b>STEAL</b> close to the ball handler (reaching can cost a foul). <b>BLOCK</b> jumps to contest shots and grab rebounds.</p>
        </div>
      </div>`,
   );

@@ -135,7 +135,9 @@ export class Renderer {
       const bx = side === 0 ? 0 : COURT_L;
       const fx = side === 0 ? 19 : COURT_L - 19;
       this.poly([[bx, 17], [fx, 17], [fx, 33], [bx, 33]], true);
-      c.fillStyle = side === 0 ? hexA(g.teams[1].def.primary, 0.55) : hexA(home.primary, 0.55);
+      // Each paint is coloured for the team attacking that basket (swaps at halftime).
+      const attacker = (side === 0) === (g.dir(0) < 0) ? 0 : 1;
+      c.fillStyle = hexA(g.teams[attacker].def.primary, 0.55);
       c.fill();
     }
     // Center logo

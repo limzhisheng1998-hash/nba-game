@@ -22,7 +22,8 @@ The focus is on game mechanics. Players are simple jersey tokens, not detailed m
   - fouling out
   - out of bounds and shot-clock violations
   - overtime
-- **Stamina.** It drains faster when you sprint. Auto or manual substitutions.
+  - teams swap baskets at halftime
+- Everyone runs at full speed; there's no sprint button and no fatigue. Subs are manual (fouled-out players are replaced automatically).
 - **Box scores** at the half, at the end of the game, or any time from the pause menu.
 
 ## Controls (touch)
@@ -32,8 +33,7 @@ The focus is on game mechanics. Players are simple jersey tokens, not detailed m
 | Left thumb (drag anywhere on the left) | Move | Move |
 | **A** (big orange/red) | **Shoot.** Hold, then release in the green. Near the rim it's an auto layup or dunk. | **Block.** Jump to contest or rebound. |
 | **B** (blue/green) | **Pass** to the teammate you're pushing toward, or the most open one if you're not pushing | **Steal.** Reaching can draw a foul. |
-| **C** (grey) | Sprint (hold) | Sprint (hold) |
-| **D** (purple) | **Spin move**, which can break ankles | **Switch** to the defender closest to the ball |
+| **D** (purple) | **Spin move**, which can break ankles | **Switch** to the defender closest to the ball (control also auto-switches when the ball changes hands) |
 
 ## Run it
 

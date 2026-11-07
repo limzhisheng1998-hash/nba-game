@@ -224,11 +224,15 @@ export class Game {
 
   // ---------- geometry helpers ----------
 
+  /** Teams swap baskets at halftime (2nd half and OT). */
+  flipped = false;
+  /** Basket this side attacks. */
   hoopX(side: Side) {
-    return side === 0 ? RIGHT_HOOP.x : LEFT_HOOP.x;
+    return this.dir(side) > 0 ? RIGHT_HOOP.x : LEFT_HOOP.x;
   }
+  /** +1 if this side attacks to the right, -1 to the left. */
   dir(side: Side) {
-    return side === 0 ? 1 : -1;
+    return (side === 0) !== this.flipped ? 1 : -1;
   }
   /** Floor spots for the offense, in feet from the attacking baseline. */
   private spot(side: Side, slot: number) {
@@ -240,7 +244,7 @@ export class Game {
       { u: 9, y: 17 },
     ];
     const s = SPOTS[slot];
-    return { x: side === 0 ? COURT_L - s.u : s.u, y: s.y };
+    return { x: this.dir(side) > 0 ? COURT_L - s.u : s.u, y: s.y };
   }
   private opp(side: Side): Side {
     return side === 0 ? 1 : 0;
@@ -291,7 +295,6 @@ export class Game {
     if (ph === 'break' || ph === 'final') return;
     this.integrate(dt);
     this.updateBall(dt);
-    this.updateStamina(dt);
   }
 
   private updateLive(dt: number, inp: FrameInput) {
@@ -328,6 +331,10 @@ export class Game {
     if (b.mode === 'held' && b.owner && b.owner.team === side) this.controlled = b.owner;
     if (!this.controlled || !this.controlled.onCourt) this.controlled = this.nearestToBall(team.court);
     const userHasBall = b.mode === 'held' && b.owner?.team === side;
+    // Auto-switch: when the opponent gets a new ball handler, take the defender closest to him.
+    const handler = b.mode === 'held' ? b.owner : null;
+    if (handler && handler.team !== side && handler !== this.lastHandler) this.autoSwitchTo(handler);
+    this.lastHandler = handler;
     if (inp.dDown && !userHasBall) this.switchPlayer();
     const p = this.controlled;
 
@@ -362,6 +369,21 @@ export class Game {
       if (inp.aDown) this.jump(p);
       if (inp.bDown) this.stealAttempt(p);
     }
+  }
+
+  private lastHandler: Player | null = null;
+
+  private autoSwitchTo(handler: Player) {
+    let best = this.teams[this.user].court[0];
+    let bd = Infinity;
+    for (const p of this.teams[this.user].court) {
+      const d = dist(p.x, p.y, handler.x, handler.y);
+      if (d < bd) {
+        bd = d;
+        best = p;
+      }
+    }
+    this.controlled = best;
   }
 
   private switchPlayer() {
@@ -408,9 +430,8 @@ export class Game {
   // ---------- actions ----------
 
   speedOf(p: Player) {
-    let s = 13 + (p.r.speed - 50) * 0.12;
-    if (p.sprint && p.stamina > 0.05) s *= 1.3;
-    s *= 0.8 + 0.2 * p.stamina;
+    // Everyone moves at full sprint speed (no sprint button, no stamina).
+    let s = (13 + (p.r.speed - 50) * 0.12) * 1.3;
     if (this.ball.owner === p) s *= 0.92;
     if (p.action === 'spin') s *= 1.4;
     if (this.isAITeam(p.team) && p.team !== this.user) s *= this.diff.aiSpeed;
@@ -1447,10 +1468,13 @@ export class Game {
     if (this.phase !== 'break') return;
     this.quarter++;
     this.clock = this.quarter <= 4 ? this.quarterLen : this.quarterLen / 2;
+    if (this.quarter === 3) {
+      this.flipped = true;
+      this.toast('Teams switch sides', '#9ad');
+    }
     for (const t of this.teams) {
       t.teamFouls = 0;
       t.quarterScores.push(0);
-      for (const p of t.roster) p.stamina = Math.min(1, p.stamina + 0.2);
     }
     const loser = this.opp(this.tipWinner);
     const side: Side = this.quarter === 2 || this.quarter === 3 ? loser : this.quarter === 4 ? this.tipWinner : this.rng() < 0.5 ? 0 : 1;
@@ -1507,16 +1531,11 @@ export class Game {
       });
       return;
     }
-    const team = this.teams[side];
-    team.court.forEach((cur, slot) => {
-      if (cur === keep) return;
-      const starter = team.starters[slot];
-      if (cur.fouls >= 6 || cur.stamina < 0.55) {
-        const sub = this.bestBench(side, cur);
-        if (sub) this.sub(side, slot, sub);
-      } else if (cur !== starter && !starter.onCourt && starter.stamina > 0.85 && starter.fouls < 6) {
-        this.sub(side, slot, starter);
-      }
+    // No fatigue: the coach only replaces fouled-out players.
+    this.teams[side].court.forEach((cur, slot) => {
+      if (cur === keep || cur.fouls < 6) return;
+      const sub = this.bestBench(side, cur);
+      if (sub) this.sub(side, slot, sub);
     });
   }
 
@@ -1525,9 +1544,9 @@ export class Game {
     let best: Player | null = null;
     let bs = -Infinity;
     for (const p of this.teams[side].roster) {
-      if (p.onCourt || p.fouls >= 6 || p.stamina < 0.65) continue;
+      if (p.onCourt || p.fouls >= 6) continue;
       const gap = Math.abs(order.indexOf(p.def.pos) - order.indexOf(out.def.pos));
-      const s = p.def.ovr + p.stamina * 10 - gap * 5;
+      const s = p.def.ovr - gap * 5;
       if (s > bs) {
         bs = s;
         best = p;
@@ -1555,22 +1574,6 @@ export class Game {
     if (this.controlled === out) this.controlled = inP;
     if (this.ft && this.ft.shooter === out) this.ft.shooter = inP;
     if (side === this.user && !this.userAI) this.toast(`Sub: ${inP.def.name} in for ${out.def.name}`, '#9ad');
-  }
-
-  private updateStamina(dt: number) {
-    if (this.phase !== 'live') return;
-    const scale = 12 / this.settings.quarterMinutes;
-    for (const t of this.teams) {
-      for (const p of t.roster) {
-        if (p.onCourt) {
-          const sprinting = p.sprint && Math.hypot(p.vx, p.vy) > 8;
-          const drain = (0.001 + (sprinting ? 0.006 : 0)) * scale * (1.4 - p.r.stamina / 100);
-          p.stamina = Math.max(0, p.stamina - drain * dt);
-        } else {
-          p.stamina = Math.min(1, p.stamina + 0.004 * scale * dt);
-        }
-      }
-    }
   }
 
   // ---------- read-only helpers for the UI ----------

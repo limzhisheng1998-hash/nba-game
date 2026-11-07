@@ -133,7 +133,7 @@ export class GameView {
     const clock = fmtClock(g.clock);
     const shot = g.phase === 'live' || g.phase === 'inbound' ? String(Math.ceil(Math.min(g.shotClock, 24))) : '';
     const p = g.controlled;
-    const info = p ? `${esc(lastName(p.def.name))} <i class="stam"><i style="width:${Math.round(p.stamina * 100)}%"></i></i>` : '';
+    const info = p ? esc(lastName(p.def.name)) : '';
     const key = `${g.teams[0].score}|${g.teams[1].score}|${g.periodLabel}|${clock}|${shot}|${info}`;
     if (key !== this.hudCache) {
       this.hudCache = key;
@@ -268,7 +268,7 @@ export class GameView {
     const row = (p: Player, extra: string) => `<div class="sub-row ${extra}" data-id="${esc(p.def.id)}">
         <span class="sr-pos">${p.onCourt ? esc(['PG', 'SG', 'SF', 'PF', 'C'][p.slot]) : esc(p.def.pos)}</span>
         <span class="sr-name">${esc(p.def.name)}<small>${p.line.pts} pts · ${p.fouls} PF${p.fouls >= 6 ? ' · OUT' : ''}</small></span>
-        <b>${p.def.ovr}</b><i class="stam"><i style="width:${Math.round(p.stamina * 100)}%"></i></i></div>`;
+        <b>${p.def.ovr}</b></div>`;
     const render = () => {
       const bench = team.roster.filter((p) => !p.onCourt);
       const o = this.openOverlay(`<div class="box-head"><button class="back">‹ Back</button><h3>Substitutions</h3></div>
@@ -277,7 +277,7 @@ export class GameView {
           <div><h4>On court</h4>${team.court.map((p, i) => row(p, `court ${pick === i ? 'picked' : ''}`)).join('')}</div>
           <div><h4>Bench</h4>${bench.length ? bench.map((p) => row(p, `bench ${p.fouls >= 6 ? 'out' : ''}`)).join('') : '<p class="hint">No bench players.</p>'}</div>
         </div>
-        <p class="hint">${g.settings.autoSubs ? 'Auto subs are on — the coach may change tired players at dead balls.' : 'Manual subs: only you make changes (fouled-out players are replaced automatically).'}</p>`);
+        <p class="hint">Players don't get tired. Fouled-out players are replaced automatically; any other change is up to you.</p>`);
       o.querySelector('.back')!.addEventListener('click', back);
       o.querySelectorAll<HTMLElement>('.sub-row.court').forEach((el, i) =>
         el.addEventListener('click', () => {

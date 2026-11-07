@@ -737,18 +737,11 @@ canvas.court {
   height: 64px;
   background: #1d72d8a8;
 }
-.btn-c {
-  right: 8px;
-  bottom: 90px;
-  width: 60px;
-  height: 60px;
-  background: #3a3f48a8;
-}
 .btn-d {
-  right: 84px;
-  bottom: 80px;
-  width: 56px;
-  height: 56px;
+  right: 9px;
+  bottom: 92px;
+  width: 62px;
+  height: 62px;
   background: #7a3fd0a8;
 }
 .pad[data-mode='defense'] .btn-a {
@@ -905,16 +898,16 @@ canvas.court {
   font-size: 11px;
 }
 
-/* On defense, STEAL sits top-left and SWITCH bottom-left (swapped from PASS/SPIN spots). */
+/* On defense, STEAL sits on top and SWITCH on the left (swapped from PASS/SPIN spots). */
 .pad[data-mode='defense'] .btn-b {
-  right: 84px;
-  bottom: 80px;
-  width: 60px;
-  height: 60px;
+  right: 9px;
+  bottom: 92px;
+  width: 62px;
+  height: 62px;
 }
 .pad[data-mode='defense'] .btn-d {
   right: 90px;
   bottom: 4px;
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
 }
