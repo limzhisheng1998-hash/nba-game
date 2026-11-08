@@ -911,3 +911,18 @@ canvas.court {
   width: 64px;
   height: 64px;
 }
+
+/* Box score: Back + tabs stay put, only the table scrolls. */
+.panel.box-panel {
+  display: flex;
+  flex-direction: column;
+}
+.panel.box-panel .box-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.box-head .back {
+  min-width: 64px;
+  min-height: 44px;
+}

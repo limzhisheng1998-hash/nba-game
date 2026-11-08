@@ -9,6 +9,29 @@ interface Callbacks {
   onRematch: () => void;
 }
 
+/**
+ * Reliable tap for overlay buttons. iOS Safari can drop or mis-target `click` inside the
+ * rotated game container, so fire on pointerup (when the press started on this element),
+ * fall back to click, and swallow the ghost click iOS sends right after.
+ */
+let lastTap = 0;
+function onTap(el: Element, fn: () => void) {
+  let down = false;
+  el.addEventListener('pointerdown', () => (down = true));
+  el.addEventListener('pointercancel', () => (down = false));
+  el.addEventListener('pointerup', () => {
+    if (!down) return;
+    down = false;
+    lastTap = Date.now();
+    fn();
+  });
+  el.addEventListener('click', () => {
+    if (Date.now() - lastTap < 450) return;
+    lastTap = Date.now();
+    fn();
+  });
+}
+
 const STEP = 1 / 60;
 
 export class GameView {
@@ -71,12 +94,15 @@ export class GameView {
       toasts: q('.toasts'),
     };
     this.overlay = q('.overlay');
+    this.overlay.addEventListener('pointerup', (e) => {
+      if (e.target === this.overlay && this.backdropBack) this.backdropBack();
+    });
     this.game = new Game(home, away, settings);
     this.gameEl = q('.game');
     this.input = new TouchInput(q('.controls'));
     this.applyOrientation();
     this.renderer = new Renderer(q('canvas.court') as HTMLCanvasElement);
-    q('.pause-btn').addEventListener('click', () => this.pause());
+    onTap(q('.pause-btn'), () => this.pause());
     window.addEventListener('resize', this.onResize);
     window.addEventListener('orientationchange', this.onResize);
     document.addEventListener('visibilitychange', this.onVis);
@@ -154,8 +180,12 @@ export class GameView {
 
   // ---------- overlays ----------
 
-  private openOverlay(html: string) {
-    this.overlay.innerHTML = `<div class="panel">${html}</div>`;
+  /** Called when the dark backdrop around the panel is tapped (Box Score / Subs screens). */
+  private backdropBack: (() => void) | null = null;
+
+  private openOverlay(html: string, cls = '') {
+    this.backdropBack = null;
+    this.overlay.innerHTML = `<div class="panel ${cls}">${html}</div>`;
     this.overlay.classList.remove('hidden');
     this.input.reset();
     return this.overlay;
@@ -185,10 +215,10 @@ export class GameView {
         <button class="big alt" data-a="box">Box Score</button>
         <button class="big danger" data-a="quit">Quit Game</button>
       </div>`);
-    o.querySelector('[data-a="resume"]')!.addEventListener('click', () => this.resume());
-    o.querySelector('[data-a="subs"]')!.addEventListener('click', () => this.showSubs(() => this.showPauseMenu()));
-    o.querySelector('[data-a="box"]')!.addEventListener('click', () => this.showBox(() => this.showPauseMenu()));
-    o.querySelector('[data-a="quit"]')!.addEventListener('click', () => this.cb.onQuit());
+    onTap(o.querySelector('[data-a="resume"]')!, () => this.resume());
+    onTap(o.querySelector('[data-a="subs"]')!, () => this.showSubs(() => this.showPauseMenu()));
+    onTap(o.querySelector('[data-a="box"]')!, () => this.showBox(() => this.showPauseMenu()));
+    onTap(o.querySelector('[data-a="quit"]')!, () => this.cb.onQuit());
   }
 
   private scoreLine() {
@@ -208,12 +238,12 @@ export class GameView {
         <button class="big alt" data-a="subs">Substitutions</button>
         <button class="big alt" data-a="box">Box Score</button>
       </div>`);
-    o.querySelector('[data-a="go"]')!.addEventListener('click', () => {
+    onTap(o.querySelector('[data-a="go"]')!, () => {
       this.closeOverlay();
       g.continueAfterBreak();
     });
-    o.querySelector('[data-a="subs"]')!.addEventListener('click', () => this.showSubs(() => this.showBreak()));
-    o.querySelector('[data-a="box"]')!.addEventListener('click', () => this.showBox(() => this.showBreak()));
+    onTap(o.querySelector('[data-a="subs"]')!, () => this.showSubs(() => this.showBreak()));
+    onTap(o.querySelector('[data-a="box"]')!, () => this.showBox(() => this.showBreak()));
   }
 
   private showFinal() {
@@ -228,9 +258,9 @@ export class GameView {
         <button class="big alt" data-a="again">Rematch</button>
         <button class="big alt" data-a="menu">Main Menu</button>
       </div>`);
-    o.querySelector('[data-a="box"]')!.addEventListener('click', () => this.showBox(() => this.showFinal()));
-    o.querySelector('[data-a="again"]')!.addEventListener('click', () => this.cb.onRematch());
-    o.querySelector('[data-a="menu"]')!.addEventListener('click', () => this.cb.onQuit());
+    onTap(o.querySelector('[data-a="box"]')!, () => this.showBox(() => this.showFinal()));
+    onTap(o.querySelector('[data-a="again"]')!, () => this.cb.onRematch());
+    onTap(o.querySelector('[data-a="menu"]')!, () => this.cb.onQuit());
   }
 
   private playerOfGame() {
@@ -249,10 +279,11 @@ export class GameView {
       const o = this.openOverlay(`<div class="box-head">
           <button class="back">‹ Back</button>
           <div class="tabs">${g.teams.map((t, i) => `<button class="chip ${i === side ? 'on' : ''}" data-s="${i}">${esc(t.def.abbr)} ${t.score}</button>`).join('')}</div>
-        </div>${boxScore(g, side)}`);
-      o.querySelector('.back')!.addEventListener('click', back);
+        </div>${boxScore(g, side)}`, 'box-panel');
+      this.backdropBack = back;
+      onTap(o.querySelector('.back')!, back);
       o.querySelectorAll<HTMLElement>('[data-s]').forEach((b) =>
-        b.addEventListener('click', () => {
+        onTap(b, () => {
           side = Number(b.dataset.s) as Side;
           render();
         }),
@@ -278,15 +309,16 @@ export class GameView {
           <div><h4>Bench</h4>${bench.length ? bench.map((p) => row(p, `bench ${p.fouls >= 6 ? 'out' : ''}`)).join('') : '<p class="hint">No bench players.</p>'}</div>
         </div>
         <p class="hint">Players don't get tired. Fouled-out players are replaced automatically; any other change is up to you.</p>`);
-      o.querySelector('.back')!.addEventListener('click', back);
+      this.backdropBack = back;
+      onTap(o.querySelector('.back')!, back);
       o.querySelectorAll<HTMLElement>('.sub-row.court').forEach((el, i) =>
-        el.addEventListener('click', () => {
+        onTap(el, () => {
           pick = i;
           render();
         }),
       );
       o.querySelectorAll<HTMLElement>('.sub-row.bench').forEach((el) =>
-        el.addEventListener('click', () => {
+        onTap(el, () => {
           if (pick === null) return;
           const p = team.roster.find((x) => x.def.id === el.dataset.id);
           if (!p || p.fouls >= 6) return;

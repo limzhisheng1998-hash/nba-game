@@ -15,6 +15,9 @@ const LABELS: Record<'offense' | 'defense', Record<Btn, string>> = {
 export class TouchInput {
   private held: Record<Btn, boolean> = { a: false, b: false, d: false };
   private prev: Record<Btn, boolean> = { a: false, b: false, d: false };
+  /** Presses latched until the next frame, so a tap shorter than one frame is never lost. */
+  private tapped: Record<Btn, boolean> = { a: false, b: false, d: false };
+  private releasedA = false;
   private mx = 0;
   private my = 0;
   private joyId: number | null = null;
@@ -102,9 +105,11 @@ export class TouchInput {
         e.preventDefault();
         el.setPointerCapture?.(e.pointerId);
         this.held[b] = true;
+        this.tapped[b] = true;
         el.classList.add('down');
       });
       const up = () => {
+        if (b === 'a' && this.held.a) this.releasedA = true;
         this.held[b] = false;
         el.classList.remove('down');
       };
@@ -133,6 +138,8 @@ export class TouchInput {
 
   reset() {
     this.held = { a: false, b: false, d: false };
+    this.tapped = { a: false, b: false, d: false };
+    this.releasedA = false;
     this.mx = this.my = 0;
     this.joyId = null;
     this.keys.clear();
@@ -166,12 +173,14 @@ export class TouchInput {
       b: cur.b,
       c: false, // no sprint button: everyone runs at full speed
       d: cur.d,
-      aDown: cur.a && !this.prev.a,
-      aUp: !cur.a && this.prev.a,
-      bDown: cur.b && !this.prev.b,
-      dDown: cur.d && !this.prev.d,
+      aDown: (cur.a && !this.prev.a) || this.tapped.a,
+      aUp: (!cur.a && this.prev.a) || this.releasedA,
+      bDown: (cur.b && !this.prev.b) || this.tapped.b,
+      dDown: (cur.d && !this.prev.d) || this.tapped.d,
     };
     this.prev = cur;
+    this.tapped = { a: false, b: false, d: false };
+    this.releasedA = false;
     return out;
   }
 
