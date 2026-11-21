@@ -62,7 +62,20 @@ describe('full game simulation', () => {
         expect(p.line.tpm).toBeLessThanOrEqual(p.line.tpa);
         expect(p.line.ftm).toBeLessThanOrEqual(p.line.fta);
         expect(p.line.pts).toBe(2 * (p.line.fgm - p.line.tpm) + 3 * p.line.tpm + p.line.ftm);
+        expect(p.line.oreb).toBeLessThanOrEqual(p.line.reb);
       }
+      // Detailed box score stats.
+      const other = g.teams[t === g.teams[0] ? 1 : 0];
+      const pm = t.roster.reduce((s, p) => s + p.line.pm, 0);
+      expect(pm).toBe(5 * (t.score - other.score));
+      const secs = t.roster.reduce((s, p) => s + p.line.secs, 0);
+      const gameSecs = (4 + Math.max(0, g.quarter - 4) / 2) * g.quarterLen;
+      expect(Math.abs(secs - 5 * gameSecs)).toBeLessThan(1);
+      for (const v of [t.extra.paint, t.extra.second, t.extra.offTO, t.extra.bigLead]) {
+        expect(v).toBeGreaterThanOrEqual(0);
+        expect(v).toBeLessThanOrEqual(t.score);
+      }
+      expect(t.extra.paint).toBeGreaterThan(0);
     }
   });
 

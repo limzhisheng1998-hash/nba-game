@@ -24,7 +24,7 @@ The focus is on game mechanics. Players are simple jersey tokens, not detailed m
   - overtime
   - teams swap baskets at halftime
 - Everyone runs at full speed; there's no sprint button and no fatigue. Subs are manual (fouled-out players are replaced automatically).
-- **Box scores** at the half, at the end of the game, or any time from the pause menu.
+- **Box scores** at the half, at the end of the game, or any time from the pause menu: minutes, points, FG / 3P / FT with percentages, offensive and defensive rebounds, assists, steals, blocks, turnovers, fouls and plus/minus, plus team points in the paint, second-chance points, points off turnovers and biggest lead.
 
 ## Controls (touch)
 

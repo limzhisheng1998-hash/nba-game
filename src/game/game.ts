@@ -46,9 +46,13 @@ export interface Line {
   fta: number;
   tov: number;
   pf: number;
+  /** Game-clock seconds on the floor. */
+  secs: number;
+  /** Plus/minus: score margin while on the floor. */
+  pm: number;
 }
 
-const emptyLine = (): Line => ({ pts: 0, reb: 0, oreb: 0, ast: 0, stl: 0, blk: 0, fgm: 0, fga: 0, tpm: 0, tpa: 0, ftm: 0, fta: 0, tov: 0, pf: 0 });
+const emptyLine = (): Line => ({ pts: 0, reb: 0, oreb: 0, ast: 0, stl: 0, blk: 0, fgm: 0, fga: 0, tpm: 0, tpa: 0, ftm: 0, fta: 0, tov: 0, pf: 0, secs: 0, pm: 0 });
 
 type Action = 'none' | 'shoot' | 'layup' | 'jump' | 'stunned' | 'spin' | 'ftshoot';
 
@@ -154,6 +158,8 @@ export interface TeamRT {
   score: number;
   teamFouls: number;
   quarterScores: number[];
+  /** Team-level extras for the box score. */
+  extra: { paint: number; second: number; offTO: number; bigLead: number };
 }
 
 export interface Toast {
@@ -219,7 +225,7 @@ export class Game {
       p.onCourt = true;
       p.slot = i;
     });
-    return { def, roster, court, starters: [...court], score: 0, teamFouls: 0, quarterScores: [0] };
+    return { def, roster, court, starters: [...court], score: 0, teamFouls: 0, quarterScores: [0], extra: { paint: 0, second: 0, offTO: 0, bigLead: 0 } };
   }
 
   // ---------- geometry helpers ----------
@@ -300,6 +306,7 @@ export class Game {
   private updateLive(dt: number, inp: FrameInput) {
     if (this.clock > 0) {
       this.clock -= dt;
+      for (const p of this.onCourt()) p.line.secs += dt;
       if (this.clock <= 0) {
         this.clock = 0;
         this.buzzer = true;
@@ -1153,8 +1160,13 @@ export class Game {
     this.gainPossession(pick);
   }
 
+  /** How the current possession started, for second-chance and points-off-turnover stats. */
+  private possFrom: 'normal' | 'oreb' | 'turnover' = 'normal';
+
   private gainPossession(p: Player) {
     const b = this.ball;
+    if (p.team !== this.offense) this.possFrom = b.fromShot ? 'normal' : 'turnover';
+    else if (b.fromShot && p.team === b.fromShot.team) this.possFrom = 'oreb';
     if (b.fromShot) {
       p.line.reb++;
       if (p.team === b.fromShot.team) {
@@ -1222,7 +1234,14 @@ export class Game {
     const b = this.ball;
     const p = s.shooter;
     const team = this.teams[p.team];
+    const other = this.teams[this.opp(p.team)];
     team.score += s.pts;
+    for (const q of team.court) q.line.pm += s.pts;
+    for (const q of other.court) q.line.pm -= s.pts;
+    if (s.kind === 'layup' || s.kind === 'dunk' || s.kind === 'close') team.extra.paint += s.pts;
+    if (this.possFrom === 'oreb') team.extra.second += s.pts;
+    if (this.possFrom === 'turnover') team.extra.offTO += s.pts;
+    team.extra.bigLead = Math.max(team.extra.bigLead, team.score - other.score);
     team.quarterScores[team.quarterScores.length - 1] += s.pts;
     p.line.pts += s.pts;
     b.shot = null;
@@ -1285,11 +1304,13 @@ export class Game {
     const losing = lastTouch ?? this.offense;
     this.toast(reason, '#ff5a5a');
     this.inbound(this.opp(losing), 'side');
+    this.possFrom = 'turnover';
   }
 
   private inbound(side: Side, kind: 'make' | 'side' | 'start', shotClock = 24) {
     this.phase = 'inbound';
     this.phaseT = kind === 'make' ? 0.9 : 1.2;
+    if (side !== this.offense || kind !== 'side') this.possFrom = 'normal';
     this.offense = side;
     this.shotClock = shotClock;
     this.lastPass = null;

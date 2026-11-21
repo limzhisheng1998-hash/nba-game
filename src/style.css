@@ -926,3 +926,58 @@ canvas.court {
   min-width: 64px;
   min-height: 44px;
 }
+
+/* Detailed box score: sticky name column, compact cells, team extras strip. */
+.box th,
+.box td {
+  padding: 4px 6px;
+  text-align: center;
+}
+.box td:first-child,
+.box th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--panel);
+  text-align: left;
+  box-shadow: 1px 0 0 var(--line);
+}
+.box td:first-child small {
+  margin-left: 5px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.box th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--panel);
+}
+.box th:first-child {
+  z-index: 3;
+}
+.box tr.dnp td {
+  color: #6b7480;
+}
+.box tr.last-starter td {
+  border-bottom: 2px solid var(--line);
+}
+.box .pos {
+  color: var(--good);
+}
+.box .neg {
+  color: var(--bad);
+}
+.box-extra {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 16px;
+  padding-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.box-extra b {
+  color: var(--text);
+  margin-left: 3px;
+}

@@ -356,17 +356,36 @@ function gameScore(p: Player) {
 
 function boxScore(g: Game, side: Side) {
   const t = g.teams[side];
-  const rows = [...t.roster].sort((a, b) => Number(b.onCourt) - Number(a.onCourt) || b.line.pts - a.line.pts);
-  const tot = rows.reduce(
-    (s, p) => {
-      for (const k of Object.keys(s) as (keyof typeof s)[]) s[k] += p.line[k];
-      return s;
-    },
-    { pts: 0, reb: 0, oreb: 0, ast: 0, stl: 0, blk: 0, fgm: 0, fga: 0, tpm: 0, tpa: 0, ftm: 0, fta: 0, tov: 0, pf: 0 },
-  );
-  const cells = (l: typeof tot) =>
-    `<td><b>${l.pts}</b></td><td>${l.reb}</td><td>${l.ast}</td><td>${l.stl}</td><td>${l.blk}</td><td>${l.fgm}-${l.fga}</td><td>${l.tpm}-${l.tpa}</td><td>${l.ftm}-${l.fta}</td><td>${l.tov}</td><td>${l.pf}</td>`;
-  return `<div class="box-wrap"><table class="box"><thead><tr><th>Player</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>FG</th><th>3P</th><th>FT</th><th>TO</th><th>PF</th></tr></thead>
-    <tbody>${rows.map((p) => `<tr class="${p.onCourt ? 'oc' : ''}"><td>${esc(p.def.name)}</td>${cells(p.line)}</tr>`).join('')}
-    <tr class="tot"><td>Team</td>${cells(tot)}</tr></tbody></table></div>`;
+  const o = g.teams[side === 0 ? 1 : 0];
+  // Starters first (in lineup order), then the bench by minutes played.
+  const starters = t.starters;
+  const bench = t.roster.filter((p) => !starters.includes(p)).sort((a, b) => b.line.secs - a.line.secs);
+  const rows = [...starters, ...bench];
+  const keys = ['pts', 'reb', 'oreb', 'ast', 'stl', 'blk', 'fgm', 'fga', 'tpm', 'tpa', 'ftm', 'fta', 'tov', 'pf', 'secs', 'pm'] as const;
+  type L = Record<(typeof keys)[number], number>;
+  const tot = {} as L;
+  for (const k of keys) tot[k] = rows.reduce((sum, p) => sum + p.line[k], 0);
+  // Team minutes / plus-minus aren't meaningful as sums of players.
+  tot.pm = t.score - o.score;
+  const pct = (m: number, a: number) => (a ? `${Math.round((m / a) * 100)}` : '–');
+  const mins = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
+  const pm = (v: number) => `<span class="${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${v > 0 ? '+' : ''}${v}</span>`;
+  const cells = (l: L, team = false) =>
+    `<td>${team ? '' : mins(l.secs)}</td><td><b>${l.pts}</b></td>` +
+    `<td>${l.fgm}-${l.fga}</td><td>${pct(l.fgm, l.fga)}</td>` +
+    `<td>${l.tpm}-${l.tpa}</td><td>${pct(l.tpm, l.tpa)}</td>` +
+    `<td>${l.ftm}-${l.fta}</td><td>${pct(l.ftm, l.fta)}</td>` +
+    `<td>${l.oreb}</td><td>${l.reb - l.oreb}</td><td>${l.reb}</td>` +
+    `<td>${l.ast}</td><td>${l.stl}</td><td>${l.blk}</td><td>${l.tov}</td><td>${l.pf}</td><td>${pm(l.pm)}</td>`;
+  const head = ['MIN', 'PTS', 'FG', 'FG%', '3P', '3P%', 'FT', 'FT%', 'OREB', 'DREB', 'REB', 'AST', 'STL', 'BLK', 'TO', 'PF', '+/-'];
+  const x = t.extra;
+  return `<div class="box-wrap"><table class="box"><thead><tr><th>Player</th>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead>
+    <tbody>${rows
+      .map((p, i) => {
+        const cls = [p.onCourt ? 'oc' : '', p.line.secs === 0 ? 'dnp' : '', i === 4 ? 'last-starter' : ''].join(' ');
+        return `<tr class="${cls}"><td>${esc(p.def.name)}<small>${esc(p.def.pos)}</small></td>${cells(p.line)}</tr>`;
+      })
+      .join('')}
+    <tr class="tot"><td>Team</td>${cells(tot, true)}</tr></tbody></table></div>
+    <div class="box-extra"><span>Paint <b>${x.paint}</b></span><span>2nd chance <b>${x.second}</b></span><span>Off turnovers <b>${x.offTO}</b></span><span>Biggest lead <b>${x.bigLead}</b></span></div>`;
 }
